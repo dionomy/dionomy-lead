@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: dionomy-lead
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_PATH: /app/data/leads.sqlite
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - lead-data:/app/data
+
+volumes:
+  lead-data:

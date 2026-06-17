@@ -1,0 +1,7 @@
+.git
+.serena
+data
+node_modules
+npm-debug.log
+Dockerfile
+docker-compose.yml
