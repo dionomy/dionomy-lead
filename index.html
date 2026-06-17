@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>리드 컨택 트래커</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #eef2f6;
+      --text: #1c2430;
+      --muted: #697586;
+      --line: #d9e0e8;
+      --primary: #1f6feb;
+      --primary-strong: #185abc;
+      --danger: #c73838;
+      --ok: #16803c;
+      --radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      border-color: #b7c2cf;
+      background: #f9fbfd;
+    }
+
+    .primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .primary:hover {
+      border-color: var(--primary-strong);
+      background: var(--primary-strong);
+    }
+
+    .danger {
+      border-color: #efc5c5;
+      color: var(--danger);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) auto;
+      gap: 12px;
+      align-items: stretch;
+      margin-bottom: 14px;
+    }
+
+    .upload-panel,
+    .actions,
+    .stats,
+    .table-shell {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .upload-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 68px;
+      padding: 12px;
+    }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .file-label input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 180px 180px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .filters input,
+    .filters select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+
+    .mapping-panel {
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .mapping-panel[hidden] {
+      display: none;
+    }
+
+    .mapping-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mapping-head h2 {
+      margin: 0 0 4px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .mapping-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .mapping-field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .mapping-field select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+
+    .preview-table {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .preview-table table {
+      min-width: 720px;
+    }
+
+    .preview-table th,
+    .preview-table td {
+      padding: 8px;
+      font-size: 13px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: var(--line);
+    }
+
+    .stat {
+      min-height: 72px;
+      background: var(--surface);
+      padding: 14px;
+    }
+
+    .stat strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 22px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-shell {
+      overflow: auto;
+      max-height: calc(100vh - 292px);
+    }
+
+    table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--surface-2);
+      color: #344054;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    tbody tr:hover {
+      background: #fbfcfe;
+    }
+
+    .one-line {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status {
+      min-height: 22px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .empty {
+      padding: 42px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .edit-cell {
+      width: 82px;
+    }
+
+    .edit-cell button {
+      min-height: 32px;
+      padding: 5px 9px;
+    }
+
+    dialog {
+      width: min(720px, calc(100% - 24px));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0;
+      color: var(--text);
+      box-shadow: 0 20px 70px rgba(28, 36, 48, 0.24);
+    }
+
+    dialog::backdrop {
+      background: rgba(18, 24, 31, 0.38);
+    }
+
+    .modal-form {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0 0 4px;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .modal-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .modal-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .modal-field label {
+      color: #344054;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .modal-field input,
+    .modal-field select,
+    .modal-field textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+
+    .modal-field textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .modal-actions div {
+      display: flex;
+      gap: 8px;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        width: min(100% - 20px, 1440px);
+        padding: 18px 0;
+      }
+
+      header,
+      .upload-panel {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar,
+      .filters,
+      .mapping-grid,
+      .modal-grid,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-wrap: wrap;
+      }
+
+      .table-shell {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>리드 컨택 트래커</h1>
+        <p>CSV에서 상호명, 연락처, 지역을 가져오고 메모, 답장 정보, 담당자를 관리합니다.</p>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="CSV 업로드와 작업">
+      <div class="upload-panel">
+        <label class="file-label">
+          CSV 업로드
+          <input id="csvInput" type="file" accept=".csv,text/csv,text/plain">
+        </label>
+        <p id="fileHelp">헤더가 정확히 일치하지 않아도 회사명/전화/주소 등 가까운 컬럼을 자동으로 찾습니다.</p>
+      </div>
+
+      <div class="actions">
+        <button id="addRowBtn" type="button">직접 추가</button>
+        <button id="exportBtn" type="button">CSV 내보내기</button>
+        <button id="clearBtn" class="danger" type="button">전체 삭제</button>
+      </div>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <section id="mappingPanel" class="mapping-panel" aria-label="CSV 컬럼 매핑" hidden>
+      <div class="mapping-head">
+        <div>
+          <h2>CSV 컬럼 매핑</h2>
+          <p id="mappingHelp">자동 추정값을 확인하고 필요한 컬럼을 직접 선택하세요.</p>
+        </div>
+        <div class="actions">
+          <button id="cancelMappingBtn" type="button">취소</button>
+          <button id="importMappedBtn" class="primary" type="button">가져오기</button>
+        </div>
+      </div>
+
+      <div class="mapping-grid">
+        <div class="mapping-field">
+          <label for="businessNameMap">상호명</label>
+          <select id="businessNameMap"></select>
+        </div>
+        <div class="mapping-field">
+          <label for="contactMap">연락처</label>
+          <select id="contactMap"></select>
+        </div>
+        <div class="mapping-field">
+          <label for="regionMap">지역</label>
+          <select id="regionMap"></select>
+        </div>
+      </div>
+
+      <div id="mappingPreview" class="preview-table"></div>
+    </section>
+
+    <section class="filters" aria-label="필터">
+      <input id="searchInput" type="search" placeholder="상호명, 연락처, 지역, 메모 검색">
+      <select id="replyFilter">
+        <option value="">전체 답장 상태</option>
+        <option value="미확인">미확인</option>
+        <option value="대기">대기</option>
+        <option value="답장옴">답장옴</option>
+        <option value="거절">거절</option>
+        <option value="후속 필요">후속 필요</option>
+      </select>
+      <input id="ownerFilter" type="search" placeholder="담당자 필터">
+    </section>
+
+    <section class="stats" aria-label="요약">
+      <div class="stat"><strong id="totalCount">0</strong><span>전체 리드</span></div>
+      <div class="stat"><strong id="repliedCount">0</strong><span>답장옴</span></div>
+      <div class="stat"><strong id="followUpCount">0</strong><span>후속 필요</span></div>
+      <div class="stat"><strong id="ownerCount">0</strong><span>담당자 입력</span></div>
+    </section>
+
+    <section class="table-shell" aria-label="리드 목록">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 180px;">상호명</th>
+            <th style="width: 150px;">연락처</th>
+            <th style="width: 150px;">지역</th>
+            <th style="width: 220px;">특징 메모</th>
+            <th style="width: 140px;">답장 상태</th>
+            <th style="width: 220px;">답장 정보</th>
+            <th style="width: 130px;">담당자</th>
+            <th class="edit-cell">수정</th>
+          </tr>
+        </thead>
+        <tbody id="leadBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty">CSV를 업로드하거나 직접 추가하세요.</div>
+    </section>
+  </main>
+
+  <dialog id="editDialog">
+    <form id="editForm" class="modal-form">
+      <div class="modal-head">
+        <div>
+          <h2>리드 수정</h2>
+          <p id="editDialogHelp">리드 정보를 수정합니다.</p>
+        </div>
+        <button id="closeDialogBtn" type="button">닫기</button>
+      </div>
+
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label for="editBusinessName">상호명</label>
+          <input id="editBusinessName" type="text">
+        </div>
+        <div class="modal-field">
+          <label for="editContact">연락처</label>
+          <input id="editContact" type="text">
+        </div>
+        <div class="modal-field">
+          <label for="editRegion">지역</label>
+          <input id="editRegion" type="text">
+        </div>
+        <div class="modal-field">
+          <label for="editOwner">담당자</label>
+          <input id="editOwner" type="text">
+        </div>
+        <div class="modal-field">
+          <label for="editReplyStatus">답장 상태</label>
+          <select id="editReplyStatus"></select>
+        </div>
+        <div class="modal-field full">
+          <label for="editMemo">특징 메모</label>
+          <textarea id="editMemo"></textarea>
+        </div>
+        <div class="modal-field full">
+          <label for="editReplyInfo">답장 정보</label>
+          <textarea id="editReplyInfo"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="deleteLeadBtn" class="danger" type="button">삭제</button>
+        <div>
+          <button id="cancelEditBtn" type="button">취소</button>
+          <button class="primary" type="submit">저장</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const replyStates = ["미확인", "대기", "답장옴", "거절", "후속 필요"];
+    const fieldAliases = {
+      businessName: ["상호명", "상호", "업체명", "회사명", "가게명", "매장명", "브랜드명", "이름", "name", "businessname", "business", "company", "store", "shop"],
+      contact: ["연락처", "전화번호", "전화", "휴대폰", "핸드폰", "번호", "대표번호", "연락", "tel", "phone", "mobile", "contact", "cell"],
+      region: ["지역", "주소", "위치", "소재지", "시도", "시군구", "동네", "권역", "address", "location", "region", "area", "city", "district"]
+    };
+
+    let leads = [];
+    let pendingCsv = null;
+    let editingLeadId = null;
+
+    const els = {
+      csvInput: document.getElementById("csvInput"),
+      addRowBtn: document.getElementById("addRowBtn"),
+      exportBtn: document.getElementById("exportBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      status: document.getElementById("status"),
+      mappingPanel: document.getElementById("mappingPanel"),
+      mappingHelp: document.getElementById("mappingHelp"),
+      businessNameMap: document.getElementById("businessNameMap"),
+      contactMap: document.getElementById("contactMap"),
+      regionMap: document.getElementById("regionMap"),
+      mappingPreview: document.getElementById("mappingPreview"),
+      importMappedBtn: document.getElementById("importMappedBtn"),
+      cancelMappingBtn: document.getElementById("cancelMappingBtn"),
+      searchInput: document.getElementById("searchInput"),
+      replyFilter: document.getElementById("replyFilter"),
+      ownerFilter: document.getElementById("ownerFilter"),
+      leadBody: document.getElementById("leadBody"),
+      emptyState: document.getElementById("emptyState"),
+      editDialog: document.getElementById("editDialog"),
+      editForm: document.getElementById("editForm"),
+      closeDialogBtn: document.getElementById("closeDialogBtn"),
+      cancelEditBtn: document.getElementById("cancelEditBtn"),
+      deleteLeadBtn: document.getElementById("deleteLeadBtn"),
+      editBusinessName: document.getElementById("editBusinessName"),
+      editContact: document.getElementById("editContact"),
+      editRegion: document.getElementById("editRegion"),
+      editOwner: document.getElementById("editOwner"),
+      editReplyStatus: document.getElementById("editReplyStatus"),
+      editMemo: document.getElementById("editMemo"),
+      editReplyInfo: document.getElementById("editReplyInfo"),
+      totalCount: document.getElementById("totalCount"),
+      repliedCount: document.getElementById("repliedCount"),
+      followUpCount: document.getElementById("followUpCount"),
+      ownerCount: document.getElementById("ownerCount")
+    };
+
+    els.csvInput.addEventListener("change", handleCsvUpload);
+    els.addRowBtn.addEventListener("click", async () => {
+      const lead = createLead();
+      try {
+        const saved = await apiRequest("/api/leads", {
+          method: "POST",
+          body: JSON.stringify(lead)
+        });
+        leads.unshift(saved);
+        render();
+        openEditDialog(saved.id);
+        setStatus("새 리드를 추가했습니다.", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    });
+    els.exportBtn.addEventListener("click", exportCsv);
+    els.clearBtn.addEventListener("click", clearAll);
+    els.importMappedBtn.addEventListener("click", importMappedCsv);
+    els.cancelMappingBtn.addEventListener("click", cancelMapping);
+    els.editForm.addEventListener("submit", saveEdit);
+    els.closeDialogBtn.addEventListener("click", closeEditDialog);
+    els.cancelEditBtn.addEventListener("click", closeEditDialog);
+    els.deleteLeadBtn.addEventListener("click", deleteEditingLead);
+    els.searchInput.addEventListener("input", render);
+    els.replyFilter.addEventListener("change", render);
+    els.ownerFilter.addEventListener("input", render);
+
+    fillReplyStatusOptions();
+
+    loadLeadsFromServer();
+
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(path, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        },
+        ...options
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "서버 요청에 실패했습니다.");
+      }
+      if (response.status === 204) return null;
+      return response.json();
+    }
+
+    async function loadLeadsFromServer() {
+      try {
+        leads = await apiRequest("/api/leads");
+        render();
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    function createLead(values = {}) {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        businessName: values.businessName || "",
+        contact: values.contact || "",
+        region: values.region || "",
+        memo: values.memo || "",
+        replyStatus: values.replyStatus || "미확인",
+        replyInfo: values.replyInfo || "",
+        owner: values.owner || ""
+      };
+    }
+
+    function handleCsvUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          prepareCsvMapping(String(reader.result || ""), file.name);
+        } catch (error) {
+          setStatus(error.message || "CSV를 읽지 못했습니다.", "error");
+        } finally {
+          els.csvInput.value = "";
+        }
+      };
+      reader.onerror = () => setStatus("파일을 읽는 중 오류가 발생했습니다.", "error");
+      reader.readAsText(file, "utf-8");
+    }
+
+    function prepareCsvMapping(text, fileName) {
+      const rows = splitCsvRows(text.replace(/^\uFEFF/, ""));
+      const nonEmptyRows = rows.filter((row) => row.some((cell) => cell.trim()));
+      if (nonEmptyRows.length < 2) {
+        pendingCsv = null;
+        els.mappingPanel.hidden = true;
+        setStatus("가져올 데이터가 없습니다.", "error");
+        return;
+      }
+
+      const headers = nonEmptyRows[0];
+      const mapping = mapHeaders(headers);
+      const hasMappedField = mapping.businessName !== -1 || mapping.contact !== -1 || mapping.region !== -1;
+
+      if (!hasMappedField) {
+        mapping.businessName = 0;
+        mapping.contact = 1;
+        mapping.region = 2;
+      }
+
+      pendingCsv = {
+        fileName,
+        headers,
+        rows: nonEmptyRows.slice(1)
+      };
+      fillMappingSelects(headers, mapping);
+      renderMappingPreview(headers, pendingCsv.rows);
+      els.mappingHelp.textContent = `${fileName} 파일의 컬럼을 확인하세요. 자동 추정값이 기본으로 선택되어 있습니다.`;
+      els.mappingPanel.hidden = false;
+      setStatus("컬럼 매핑을 확인한 뒤 가져오기를 누르세요.", "");
+    }
+
+    async function importMappedCsv() {
+      if (!pendingCsv) {
+        setStatus("가져올 CSV가 없습니다.", "error");
+        return;
+      }
+
+      const mapping = {
+        businessName: Number(els.businessNameMap.value),
+        contact: Number(els.contactMap.value),
+        region: Number(els.regionMap.value)
+      };
+      const imported = pendingCsv.rows
+        .map((row) => createLead({
+          businessName: readCell(row, mapping.businessName),
+          contact: readCell(row, mapping.contact),
+          region: readCell(row, mapping.region)
+        }))
+        .filter((lead) => lead.businessName || lead.contact || lead.region);
+
+      if (!imported.length) {
+        setStatus("선택한 컬럼에서 가져올 데이터가 없습니다.", "error");
+        return;
+      }
+
+      try {
+        const saved = await apiRequest("/api/leads/bulk", {
+          method: "POST",
+          body: JSON.stringify({ leads: imported })
+        });
+        leads = [...saved, ...leads];
+        pendingCsv = null;
+        els.mappingPanel.hidden = true;
+        render();
+        setStatus(`${saved.length}개 리드를 가져왔습니다.`, "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    function cancelMapping() {
+      pendingCsv = null;
+      els.mappingPanel.hidden = true;
+      setStatus("CSV 가져오기를 취소했습니다.", "");
+    }
+
+    function fillMappingSelects(headers, mapping) {
+      fillMappingSelect(els.businessNameMap, headers, mapping.businessName);
+      fillMappingSelect(els.contactMap, headers, mapping.contact);
+      fillMappingSelect(els.regionMap, headers, mapping.region);
+    }
+
+    function fillMappingSelect(select, headers, selectedIndex) {
+      select.innerHTML = "";
+      const skip = document.createElement("option");
+      skip.value = "-1";
+      skip.textContent = "가져오지 않음";
+      select.appendChild(skip);
+
+      headers.forEach((header, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = header.trim() || `컬럼 ${index + 1}`;
+        option.selected = index === selectedIndex;
+        select.appendChild(option);
+      });
+      select.value = String(selectedIndex);
+    }
+
+    function renderMappingPreview(headers, rows) {
+      const previewRows = rows.slice(0, 3);
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const tbody = document.createElement("tbody");
+      const headRow = document.createElement("tr");
+
+      headers.forEach((header, index) => {
+        const th = document.createElement("th");
+        th.textContent = header.trim() || `컬럼 ${index + 1}`;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+
+      previewRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        headers.forEach((_, index) => {
+          const td = document.createElement("td");
+          td.textContent = readCell(row, index);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      table.append(thead, tbody);
+      els.mappingPreview.innerHTML = "";
+      els.mappingPreview.appendChild(table);
+    }
+
+    function splitCsvRows(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let quoted = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && quoted && next === '"') {
+          cell += '"';
+          i += 1;
+        } else if (char === '"') {
+          quoted = !quoted;
+        } else if (char === "," && !quoted) {
+          row.push(cell);
+          cell = "";
+        } else if ((char === "\n" || char === "\r") && !quoted) {
+          if (char === "\r" && next === "\n") i += 1;
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
+
+      row.push(cell);
+      rows.push(row);
+      return rows;
+    }
+
+    function mapHeaders(headers) {
+      return {
+        businessName: findHeaderIndex(headers, fieldAliases.businessName),
+        contact: findHeaderIndex(headers, fieldAliases.contact),
+        region: findHeaderIndex(headers, fieldAliases.region)
+      };
+    }
+
+    function findHeaderIndex(headers, aliases) {
+      const normalizedAliases = aliases.map(normalizeHeader);
+      return headers.findIndex((header) => {
+        const normalized = normalizeHeader(header);
+        return normalizedAliases.some((alias) => normalized === alias || normalized.includes(alias) || alias.includes(normalized));
+      });
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/[()_\-./:[\]{}]/g, "");
+    }
+
+    function readCell(row, index) {
+      return index >= 0 ? String(row[index] || "").trim() : "";
+    }
+
+    function render() {
+      const visibleLeads = getVisibleLeads();
+      els.leadBody.innerHTML = "";
+
+      visibleLeads.forEach((lead) => {
+        const tr = document.createElement("tr");
+        tr.append(
+          textCell(lead.businessName),
+          textCell(lead.contact),
+          textCell(lead.region),
+          textCell(lead.memo, "one-line"),
+          textCell(lead.replyStatus),
+          textCell(lead.replyInfo, "one-line"),
+          textCell(lead.owner),
+          editCell(lead)
+        );
+        els.leadBody.appendChild(tr);
+      });
+
+      els.emptyState.hidden = leads.length > 0;
+      updateStats();
+    }
+
+    function textCell(value, className = "") {
+      const td = document.createElement("td");
+      const div = document.createElement("div");
+      div.className = className;
+      div.textContent = value || "-";
+      div.title = value || "";
+      td.appendChild(div);
+      return td;
+    }
+
+    function editCell(lead) {
+      const td = document.createElement("td");
+      td.className = "edit-cell";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "수정";
+      button.addEventListener("click", () => openEditDialog(lead.id));
+      td.appendChild(button);
+      return td;
+    }
+
+    function fillReplyStatusOptions() {
+      replyStates.forEach((state) => {
+        const option = document.createElement("option");
+        option.value = state;
+        option.textContent = state;
+        els.editReplyStatus.appendChild(option);
+      });
+    }
+
+    function openEditDialog(id) {
+      const lead = leads.find((item) => item.id === id);
+      if (!lead) return;
+
+      editingLeadId = id;
+      els.editBusinessName.value = lead.businessName;
+      els.editContact.value = lead.contact;
+      els.editRegion.value = lead.region;
+      els.editOwner.value = lead.owner;
+      els.editReplyStatus.value = lead.replyStatus;
+      els.editMemo.value = lead.memo;
+      els.editReplyInfo.value = lead.replyInfo;
+      els.editDialog.showModal();
+    }
+
+    function closeEditDialog() {
+      editingLeadId = null;
+      els.editDialog.close();
+    }
+
+    async function saveEdit(event) {
+      event.preventDefault();
+      const lead = leads.find((item) => item.id === editingLeadId);
+      if (!lead) return;
+
+      const payload = {
+        businessName: els.editBusinessName.value.trim(),
+        contact: els.editContact.value.trim(),
+        region: els.editRegion.value.trim(),
+        owner: els.editOwner.value.trim(),
+        replyStatus: els.editReplyStatus.value,
+        memo: els.editMemo.value.trim(),
+        replyInfo: els.editReplyInfo.value.trim()
+      };
+
+      try {
+        const updated = await apiRequest(`/api/leads/${encodeURIComponent(editingLeadId)}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload)
+        });
+        Object.assign(lead, updated);
+        closeEditDialog();
+        render();
+        setStatus("리드를 수정했습니다.", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    async function deleteEditingLead() {
+      const lead = leads.find((item) => item.id === editingLeadId);
+      if (!lead) return;
+
+      if (!confirm("이 리드를 삭제할까요?")) return;
+      try {
+        await apiRequest(`/api/leads/${encodeURIComponent(editingLeadId)}`, {
+          method: "DELETE"
+        });
+        leads = leads.filter((item) => item.id !== editingLeadId);
+        closeEditDialog();
+        render();
+        setStatus("리드를 삭제했습니다.", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    function getVisibleLeads() {
+      const keyword = normalizeSearch(els.searchInput.value);
+      const reply = els.replyFilter.value;
+      const owner = normalizeSearch(els.ownerFilter.value);
+
+      return leads.filter((lead) => {
+        const haystack = normalizeSearch([
+          lead.businessName,
+          lead.contact,
+          lead.region,
+          lead.memo,
+          lead.replyInfo,
+          lead.owner
+        ].join(" "));
+        return (!keyword || haystack.includes(keyword))
+          && (!reply || lead.replyStatus === reply)
+          && (!owner || normalizeSearch(lead.owner).includes(owner));
+      });
+    }
+
+    function normalizeSearch(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function updateStats() {
+      els.totalCount.textContent = leads.length;
+      els.repliedCount.textContent = leads.filter((lead) => lead.replyStatus === "답장옴").length;
+      els.followUpCount.textContent = leads.filter((lead) => lead.replyStatus === "후속 필요").length;
+      els.ownerCount.textContent = leads.filter((lead) => lead.owner.trim()).length;
+    }
+
+    function saveAndRender(message, type) {
+      render();
+      setStatus(message, type);
+    }
+
+    function setStatus(message, type = "") {
+      els.status.textContent = message;
+      els.status.className = `status ${type}`.trim();
+    }
+
+    function exportCsv() {
+      if (!leads.length) {
+        setStatus("내보낼 리드가 없습니다.", "error");
+        return;
+      }
+
+      const headers = ["상호명", "연락처", "지역", "특징 메모", "답장 상태", "답장 정보", "담당자"];
+      const rows = leads.map((lead) => [
+        lead.businessName,
+        lead.contact,
+        lead.region,
+        lead.memo,
+        lead.replyStatus,
+        lead.replyInfo,
+        lead.owner
+      ]);
+      const csv = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(",")).join("\n");
+      const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "lead-tracker.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+      setStatus("CSV를 내보냈습니다.", "ok");
+    }
+
+    function escapeCsvCell(value) {
+      const text = String(value || "");
+      return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    async function clearAll() {
+      if (!leads.length) {
+        setStatus("삭제할 리드가 없습니다.", "error");
+        return;
+      }
+
+      if (!confirm("저장된 리드를 모두 삭제할까요?")) return;
+      try {
+        await apiRequest("/api/leads", {
+          method: "DELETE"
+        });
+        leads = [];
+        render();
+        setStatus("전체 리드를 삭제했습니다.", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+  </script>
+</body>
+</html>
